@@ -94,6 +94,11 @@ setClass("TMT10plexSpectra",
        )
     )
 
+setClass("IBTSpectra",
+    contains = "IBSpectra",
+    representation("VIRTUAL")
+)
+
 setClass("IBT10plexSpectra",
     contains = "IBTSpectra",
     prototype = prototype(

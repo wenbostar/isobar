@@ -94,6 +94,18 @@ setClass("TMT10plexSpectra",
        )
     )
 
+setClass("IBT10plexSpectra",
+    contains = "IBTSpectra",
+    prototype = prototype(
+      reporterTagNames = c("114","115N","115C","116N","116C","117N","117C","118N","118C","119"),
+      reporterTagMasses = c(114.128,115.125,115.1314,
+                            116.1285,116.1348,117.1319,
+                            117.1382,118.1352,118.1415,
+                            119.1385),
+       isotopeImpurities = diag(nrow=10)
+       )
+    )
+
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### Validity.
 ###

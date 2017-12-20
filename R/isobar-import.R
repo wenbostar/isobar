@@ -453,7 +453,7 @@ setMethod("readIBSpectra",
             matrix(rep(114:117,nrow(mcn.i)),nrow=nrow(mcn.i),byrow=TRUE))
     } else if (tolower(peaklist.format.f) == "csv") {
       message("  reading peaklist ",peaklist.f," ...",appendLF=FALSE)
-      res <- read.delim(peaklist.f,stringsAsFactors=FALSE)
+      res <- read.delim(peaklist.f,stringsAsFactors=FALSE,quote="")
       message(" done")
       if (!"spectrum" %in% colnames(res)) stop("'spectrum' column is missing from peaklist CSV")
       if (sum(.grep_columns(res,"ions$")) < length(reporterTagNames)) 
@@ -882,7 +882,7 @@ read.mzid <- function(filename) {
          msgf      = list(ext=c("msgfp.csv","tsv"),f=.read.msgfp.tsv),
          ibspectra = list(ext=c("csv"),
                           f=function(x) read.table(x,header=TRUE,sep=sep,
-                                                   stringsAsFactors=FALSE,...)))
+                                                   stringsAsFactors=FALSE,quote="",...)))
 
     for (etype in names(ext.def)) {
       if (is.format(etype,ext.def[[etype]][["ext"]])) {
@@ -1364,7 +1364,7 @@ read.mzid <- function(filename) {
   ## load mapping (either character or data.frame)
   if (!is.null(mapping)) {
     if (is.character(mapping) && file.exists(mapping))
-      mapping <- do.call(rbind,lapply(mapping,read.table,sep=",",header=TRUE,stringsAsFactors=FALSE))
+      mapping <- do.call(rbind,lapply(mapping,read.table,sep=",",header=TRUE,stringsAsFactors=FALSE,quote=""))
     if (!is.data.frame(mapping)) stop("mapping must be a data.frame or valid file name")
     if (ncol(mapping) > 2) stop("only one column in mapping")
 
@@ -1421,9 +1421,15 @@ read.mzid <- function(filename) {
   if (is.data.frame(filename)) 
     ib.data <- filename
   else
-    id.data <- read.delim(filename, sep="\t", stringsAsFactors=FALSE)
+    id.data <- read.delim(filename, sep="\t", stringsAsFactors=FALSE,quote="")
+
+  if (! "PepQValue" %in% colnames(id.data)) {
+    stop("No q-values found in MSGF+ result files.\nPlease repeat the MSGF+ search using a\ntarget-decoy search (option -tda 1)")
+  }
+
   ib.df <- data.frame(Protein=id.data[,'Protein'],
-                      spectrum=id.data[,'Title'],.convert.msgfp.pepmodif(id.data[,'Peptide']),
+                      spectrum=id.data[,'Title'],spectrum.quant=id.data[, 'Title'],
+                      .convert.msgfp.pepmodif(id.data[,'Peptide']),
                       scan.from=id.data[,'ScanNum'],dissoc.method=tolower(id.data[,'FragMethod']),
                       precursor.error=id.data[,'PrecursorError.ppm.'],charge=id.data[,'Charge'],
                       search.engine="MSGF+",score=-log10(id.data[,'SpecEValue']),
@@ -1443,6 +1449,7 @@ read.mzid <- function(filename) {
 .convert.msgfp.pepmodif <- function(peptide,modif.masses=
                                       c(iTRAQ4plex=144.102,Cys_CAM=57.021,Oxidation=15.995,
                                         iTRAQ4_ACET="144.102+42.011",ACET=42.011,
+                                        TMT6plex=229.163,
                                         METH=14.016,BIMETH=28.031,TRIMETH=42.047
                                         )) {
   modif.masses.r <- setNames(c(names(modif.masses)),c(paste0("+",modif.masses)))
